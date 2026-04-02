@@ -8,8 +8,13 @@ import db
 from datetime import datetime
 import pandas as pd
 
-# Initialize database on app startup
-db.init_db()
+# Initialize database once per session
+@st.cache_resource
+def init_database():
+    db.init_db()
+    return True
+
+init_database()
 
 # Configure page
 st.set_page_config(
