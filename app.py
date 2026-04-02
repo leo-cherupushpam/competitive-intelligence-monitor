@@ -57,7 +57,7 @@ with st.sidebar:
     st.divider()
 
     # Navigation Menu
-    st.subheader("📑 Navigation")
+    st.write("**📑 Navigation**")
 
     # Get data for badges
     try:
@@ -68,34 +68,27 @@ with st.sidebar:
 
     # Define navigation items with icons and optional badges
     nav_items = [
-        {"page": "Onboarding", "icon": "🚀", "label": "Setup"},
-        {"page": "Intelligence Queue", "icon": "📋", "label": "Validation", "badge": pending_count},
-        {"page": "Competitor Profile", "icon": "🔍", "label": "Profiles"},
-        {"page": "Market Dashboard", "icon": "📊", "label": "Dashboard"},
-        {"page": "Roadmap Signals", "icon": "🛣️", "label": "Strategy"},
-        {"page": "Settings", "icon": "⚙️", "label": "Settings"},
+        ("🚀 Setup", "Onboarding"),
+        (f"📋 Validation {f'({pending_count})' if pending_count > 0 else ''}", "Intelligence Queue"),
+        ("🔍 Profiles", "Competitor Profile"),
+        ("📊 Dashboard", "Market Dashboard"),
+        ("🛣️ Strategy", "Roadmap Signals"),
+        ("⚙️ Settings", "Settings"),
     ]
 
-    # Render navigation buttons
+    # Navigation using selectbox
     current = st.session_state.current_page
-    for item in nav_items:
-        page = item["page"]
-        icon = item["icon"]
-        label = item["label"]
-        badge = item.get("badge", 0)
+    selected = st.selectbox(
+        "Go to:",
+        options=[item[1] for item in nav_items],
+        index=[item[1] for item in nav_items].index(current),
+        format_func=lambda x: next(item[0] for item in nav_items if item[1] == x),
+        label_visibility="collapsed"
+    )
 
-        # Build button label with badge
-        if badge > 0 and page == "Intelligence Queue":
-            btn_label = f"{icon} {label} ({badge})"
-        else:
-            btn_label = f"{icon} {label}"
-
-        # Highlight current page
-        btn_type = "primary" if page == current else "secondary"
-
-        if st.button(btn_label, use_container_width=True, type=btn_type, key=f"nav_{page}"):
-            st.session_state.current_page = page
-            st.rerun()
+    if selected != current:
+        st.session_state.current_page = selected
+        st.rerun()
 
     st.divider()
 
