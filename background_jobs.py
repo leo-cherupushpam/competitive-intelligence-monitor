@@ -9,7 +9,6 @@ Uses APScheduler to run collectors on schedules:
 """
 
 import os
-import asyncio
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -34,7 +33,7 @@ def run_website_monitor():
     """Run website monitoring collector."""
     try:
         logger.info("Starting website monitor...")
-        result = asyncio.run(website_monitor.monitor_competitor_websites())
+        result = website_monitor.monitor_competitor_websites()
         logger.info(f"Website monitor completed: {result}")
     except Exception as e:
         logger.error(f"Website monitor failed: {e}")

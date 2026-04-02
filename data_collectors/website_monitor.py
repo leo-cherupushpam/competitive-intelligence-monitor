@@ -1,29 +1,43 @@
 """
-Website Monitor — Track competitor website changes using Playwright.
+Website Monitor — Track competitor website changes using requests + BeautifulSoup.
 Monitors pricing, features, blog pages for changes.
+Works on Streamlit Cloud without Playwright dependencies.
 """
 
-import asyncio
+import requests
 import time
-from datetime import datetime, timezone
 import hashlib
 import db
-from playwright.async_api import async_playwright
+from bs4 import BeautifulSoup
 
 
-async def get_page_content(url: str) -> str:
+def get_page_content(url: str) -> str:
     """
-    Fetch page content using Playwright.
-    Returns text content of the page.
+    Fetch page content using requests + BeautifulSoup.
+    Returns visible text content of the page.
     """
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch()
-            page = await browser.new_page()
-            await page.goto(url, wait_until="domcontentloaded", timeout=10000)
-            content = await page.content()
-            await browser.close()
-            return content[:2000]  # Limit to 2000 chars for storage
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/120.0.0.0 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return f"Error: HTTP {response.status_code}"
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Remove script and style elements
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
+
+        # Extract visible text
+        text = soup.get_text(separator=" ", strip=True)
+
+        # Limit to 2000 chars
+        return text[:2000]
+
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return f"Error: {str(e)}"
@@ -31,20 +45,19 @@ async def get_page_content(url: str) -> str:
 
 def detect_change(new_content: str, old_content: str) -> bool:
     """
-    Detect if content has changed significantly.
-    Uses diff detection (if > 5% different, flag as change).
+    Detect if content has changed.
+    Uses hash-based comparison.
     """
     if not old_content:
         return True
 
-    # Simple hash-based comparison
     old_hash = hashlib.md5(old_content.encode()).hexdigest()
     new_hash = hashlib.md5(new_content.encode()).hexdigest()
 
     return old_hash != new_hash
 
 
-async def monitor_competitor_websites():
+def monitor_competitor_websites():
     """
     Monitor all registered competitor websites.
     Checks pricing, features, blog pages for changes.
@@ -63,7 +76,6 @@ async def monitor_competitor_websites():
         if competitor["status"] != "ACTIVE":
             continue
 
-        # Get website sources for this competitor
         sources = db.get_sources_for_competitor(competitor["id"], active_only=True)
         website_sources = [s for s in sources if s["source_type"] == "WEBSITE"]
 
@@ -73,15 +85,9 @@ async def monitor_competitor_websites():
                 if not url:
                     continue
 
-                # Fetch current content
-                current_content = await get_page_content(url)
+                current_content = get_page_content(url)
+                detected_change = True  # First collection always flagged
 
-                # Get previous content from database
-                from sqlalchemy import text  # Would need proper import
-                # For now, just log as new data
-                detected_change = True  # Assume change for now (first collection)
-
-                # Store raw data
                 data_id = db.log_raw_data(
                     competitor["id"],
                     "WEBSITE",
@@ -99,7 +105,6 @@ async def monitor_competitor_websites():
 
     duration = time.time() - start_time
 
-    # Log collection run
     db.log_collection_run(
         "website_monitor",
         items_found=total_found,
@@ -112,10 +117,10 @@ async def monitor_competitor_websites():
     return {"items_found": total_found, "items_processed": total_processed}
 
 
-async def monitor_single_competitor(competitor_id: int, website_url: str):
+def monitor_single_competitor(competitor_id: int, website_url: str):
     """Monitor a single competitor's website."""
     try:
-        content = await get_page_content(website_url)
+        content = get_page_content(website_url)
         data_id = db.log_raw_data(
             competitor_id,
             "WEBSITE",
@@ -129,5 +134,4 @@ async def monitor_single_competitor(competitor_id: int, website_url: str):
 
 
 if __name__ == "__main__":
-    # For testing
-    asyncio.run(monitor_competitor_websites())
+    monitor_competitor_websites()
