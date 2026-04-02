@@ -8,6 +8,14 @@ import db
 from datetime import datetime
 import pandas as pd
 
+# Configure page FIRST (must be before all other Streamlit commands)
+st.set_page_config(
+    page_title="Competitive Intelligence Monitor",
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 # Initialize database once per session
 @st.cache_resource
 def init_database():
@@ -15,14 +23,6 @@ def init_database():
     return True
 
 init_database()
-
-# Configure page
-st.set_page_config(
-    page_title="Competitive Intelligence Monitor",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Initialize session state
 if "current_page" not in st.session_state:
