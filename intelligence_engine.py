@@ -75,11 +75,12 @@ Extract a competitive move from this data. Respond ONLY with valid JSON (no mark
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a product manager analyzing competitive intelligence. Respond ONLY with valid JSON, no markdown or explanation."},
                 {"role": "user", "content": prompt}
             ],
+            temperature=0.3,
             max_completion_tokens=300
         )
 
@@ -177,11 +178,12 @@ Respond ONLY with valid JSON (no markdown):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a product strategist. Respond ONLY with valid JSON, no markdown."},
                 {"role": "user", "content": prompt}
             ],
+            temperature=0.4,
             max_completion_tokens=250
         )
 
@@ -256,11 +258,12 @@ Analyze impact. Respond ONLY with JSON (no markdown):
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a product strategist. Respond ONLY with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
+            temperature=0.4,
             max_completion_tokens=200
         )
 
@@ -319,11 +322,12 @@ Focus on direct competitors in the same market/product category.
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a market research analyst. Respond ONLY with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
+            temperature=0.5,
             max_completion_tokens=500
         )
 
