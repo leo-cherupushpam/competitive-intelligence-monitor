@@ -8,6 +8,9 @@ import db
 from datetime import datetime
 import pandas as pd
 
+# Initialize database on app startup
+db.init_db()
+
 # Configure page
 st.set_page_config(
     page_title="Competitive Intelligence Monitor",

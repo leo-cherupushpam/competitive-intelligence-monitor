@@ -81,7 +81,7 @@ Extract a competitive move from this data. Respond ONLY with valid JSON (no mark
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=300
+            max_completion_tokens=300
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -176,7 +176,7 @@ Respond ONLY with valid JSON (no markdown):
                 {"role": "user", "content": prompt}
             ],
             temperature=0.4,
-            max_tokens=250
+            max_completion_tokens=250
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -248,7 +248,7 @@ Analyze impact. Respond ONLY with JSON (no markdown):
                 {"role": "user", "content": prompt}
             ],
             temperature=0.4,
-            max_tokens=200
+            max_completion_tokens=200
         )
 
         result_text = response.choices[0].message.content.strip()
@@ -305,7 +305,7 @@ Focus on direct competitors in the same market/product category.
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.5,
-                max_tokens=500
+                max_completion_tokens=500
             )
 
             result_text = response.choices[0].message.content.strip()
