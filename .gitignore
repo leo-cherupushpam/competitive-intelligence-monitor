@@ -41,8 +41,9 @@ wheels/
 *~
 .DS_Store
 
-# Streamlit cache
-.streamlit/
+# Streamlit secrets and cache (keep config.toml)
+.streamlit/*
+!.streamlit/config.toml
 
 # Logs
 *.log
