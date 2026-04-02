@@ -438,6 +438,19 @@ def get_collection_logs(limit: int = 50) -> list:
         return [dict(row) for row in c.fetchall()]
 
 
+def get_last_collection_run() -> dict:
+    """Get the most recent collection run across all collectors."""
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("""
+            SELECT * FROM data_collection_log
+            ORDER BY ran_at DESC
+            LIMIT 1
+        """)
+        row = c.fetchone()
+        return dict(row) if row else None
+
+
 def get_newsapi_usage() -> dict:
     """Get NewsAPI usage tracking (1,000/month limit)."""
     with get_db() as conn:
