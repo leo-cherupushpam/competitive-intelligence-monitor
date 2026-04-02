@@ -238,6 +238,58 @@ Analyze impact. Respond ONLY with JSON (no markdown):
         return {"signal_type": "MONITOR", "reasoning": "Impact assessment needed", "confidence": 0.5}
 
 
+def find_competitors(company_name: str, market_segment: str = None) -> list:
+    """
+    Use AI to find likely competitors for a given company.
+    Returns: [{"name": "CompetitorName", "website": "url"}, ...]
+    """
+    client = get_client()
+    if not client:
+        return []
+
+    prompt = f"""
+You are a market research analyst. Given a company, identify 5 likely competitors.
+
+Company: {company_name}
+{f"Market Segment: {market_segment}" if market_segment else ""}
+
+Respond ONLY with valid JSON (no markdown):
+{{
+    "competitors": [
+        {{
+            "name": "Competitor Name",
+            "website": "https://www.competitor.com",
+            "threat_baseline": "HIGH/MEDIUM/LOW",
+            "reason": "Why they're a competitor"
+        }}
+    ]
+}}
+
+Focus on direct competitors in the same market/product category.
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-5-nano-2025-08-07",
+            messages=[
+                {"role": "system", "content": "You are a market research analyst. Respond ONLY with valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
+            max_tokens=500
+        )
+
+        result_text = response.choices[0].message.content.strip()
+        result_text = re.sub(r'^```json\n?', '', result_text)
+        result_text = re.sub(r'\n?```$', '', result_text)
+
+        data = json.loads(result_text)
+        return data.get("competitors", [])
+    except Exception as e:
+        print(f"Competitor search error: {e}")
+        return []
+
+
 if __name__ == "__main__":
     # Test extraction
     test_data = "HubSpot released a new AI email writer feature in their platform. Customers can now compose emails with AI assistance."
