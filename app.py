@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Competitive Intelligence Monitor",
     page_icon="🎯",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Initialize database once per session
@@ -34,9 +34,20 @@ if "current_page" not in st.session_state:
         default_page = "Onboarding"
     st.session_state.current_page = default_page
 
-# Custom CSS for dark theme
+# Custom CSS for dark theme and hide sidebar
 st.markdown("""
 <style>
+    /* Hide sidebar completely */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+
+    /* Expand main content to full width */
+    [data-testid="stMainBlockContainer"] {
+        padding: 0;
+        max-width: 100%;
+    }
+
     [data-testid="stMetricValue"] {
         font-size: 2rem;
     }
@@ -46,110 +57,64 @@ st.markdown("""
         border-radius: 10px;
         border-left: 4px solid #0066cc;
     }
+
+    /* Navigation header styling */
+    .nav-header {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: #161b22;
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+
+    .nav-button {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar Navigation
-with st.sidebar:
-    st.title("🎯 Competitive Intelligence")
-    st.write("Track competitor moves. Validate intelligence. Inform strategy.")
+# Top Navigation Header
+st.markdown("🎯 **Competitive Intelligence Monitor** — Track competitor moves. Validate intelligence. Inform strategy.")
 
-    st.divider()
+st.divider()
 
-    # Navigation Menu
-    st.write("**📑 Navigation**")
+# Get data for badges
+try:
+    moves = db.get_all_moves()
+    pending_count = len([m for m in moves if m["validation_status"] == "AUTO_DETECTED"])
+except:
+    pending_count = 0
 
-    # Get data for badges
-    try:
-        moves = db.get_all_moves()
-        pending_count = len([m for m in moves if m["validation_status"] == "AUTO_DETECTED"])
-    except:
-        pending_count = 0
+# Define navigation items
+nav_items = [
+    ("🚀 Setup", "Onboarding"),
+    (f"📋 Validation {f'({pending_count})' if pending_count > 0 else ''}", "Intelligence Queue"),
+    ("🔍 Profiles", "Competitor Profile"),
+    ("📊 Dashboard", "Market Dashboard"),
+    ("🛣️ Strategy", "Roadmap Signals"),
+    ("⚙️ Settings", "Settings"),
+]
 
-    # Define navigation items with icons and optional badges
-    nav_items = [
-        ("🚀 Setup", "Onboarding"),
-        (f"📋 Validation {f'({pending_count})' if pending_count > 0 else ''}", "Intelligence Queue"),
-        ("🔍 Profiles", "Competitor Profile"),
-        ("📊 Dashboard", "Market Dashboard"),
-        ("🛣️ Strategy", "Roadmap Signals"),
-        ("⚙️ Settings", "Settings"),
-    ]
+# Top navigation bar with columns
+current = st.session_state.current_page
+nav_cols = st.columns(len(nav_items))
 
-    # Navigation dropdown
-    current = st.session_state.current_page
-    selected = st.selectbox(
-        "Go to:",
-        options=[item[1] for item in nav_items],
-        index=[item[1] for item in nav_items].index(current),
-        format_func=lambda x: next(item[0] for item in nav_items if item[1] == x),
-        label_visibility="collapsed"
-    )
+for idx, (label, page) in enumerate(nav_items):
+    with nav_cols[idx]:
+        if st.button(label, use_container_width=True,
+                     type="primary" if page == current else "secondary",
+                     key=f"nav_top_{page}"):
+            st.session_state.current_page = page
+            st.rerun()
 
-    if selected != current:
-        st.session_state.current_page = selected
-        st.rerun()
-
-    st.divider()
-
-    # Sidebar Stats (only show if not onboarding)
-    if st.session_state.current_page != "Onboarding":
-        st.subheader("📊 Quick Stats")
-
-        try:
-            stats = db.get_stats()
-
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Competitors", stats.get("total_competitors", 0))
-                st.metric("Total Moves", stats.get("total_moves", 0))
-
-            with col2:
-                st.metric("HIGH Threats", stats.get("high_threats", 0))
-                st.metric("Validated", stats.get("validated_moves", 0))
-        except Exception as e:
-            st.warning(f"Error loading stats: {e}")
-
-        st.divider()
-
-        # Collection Status
-        st.subheader("🔄 Collection Status")
-        try:
-            last_run = db.get_last_collection_run()
-            if last_run:
-                last_time = datetime.fromisoformat(last_run["ran_at"])
-                time_diff = datetime.utcnow() - last_time
-
-                # Color code based on freshness
-                if time_diff.total_seconds() < 3600:  # Less than 1 hour
-                    status_color = "🟢"
-                    status_text = f"Healthy ({int(time_diff.total_seconds()/60)}m ago)"
-                elif time_diff.total_seconds() < 86400:  # Less than 24 hours
-                    status_color = "🟡"
-                    status_text = f"Overdue ({time_diff.days}d ago)"
-                else:
-                    status_color = "🔴"
-                    status_text = f"Stale ({time_diff.days}d ago)"
-
-                st.write(f"{status_color} {status_text}")
-                st.caption(f"Found: {last_run.get('items_found', 0)} | Processed: {last_run.get('items_processed', 0)}")
-            else:
-                st.info("No collection runs yet")
-        except Exception as e:
-            st.caption(f"Status: {str(e)[:30]}")
-
-        st.divider()
-
-        # Manual trigger
-        if st.button("🚀 Run Data Collection", use_container_width=True, type="primary"):
-            from background_jobs import trigger_all_collectors
-            with st.spinner("Running collectors…"):
-                try:
-                    trigger_all_collectors()
-                    st.success("✅ Collection triggered!")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-        st.caption("Scan all data sources for competitive moves")
+st.divider()
 
 
 # Main Content Area
