@@ -80,7 +80,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top Navigation Header
+# Top Navigation Header (v2)
 st.markdown("🎯 **Competitive Intelligence Monitor** — Track competitor moves. Validate intelligence. Inform strategy.")
 
 st.divider()
