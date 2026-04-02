@@ -8,6 +8,7 @@ import requests
 import time
 import db
 from datetime import datetime, timedelta
+from intelligence_engine import get_secret
 
 
 def search_news(query: str, api_key: str = None) -> list:
@@ -157,7 +158,4 @@ Analysis: {signals['news_signal']}
 
 
 if __name__ == "__main__":
-    # For testing - requires NEWS_API_KEY environment variable
-    import os
-    api_key = os.getenv("NEWSAPI_KEY")
-    monitor_news(api_key)
+    monitor_news(get_secret("NEWSAPI_KEY"))

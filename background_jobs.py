@@ -8,8 +8,8 @@ Uses APScheduler to run collectors on schedules:
   - News monitoring: Daily at 12pm UTC
 """
 
-import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from intelligence_engine import get_secret
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 import logging
@@ -73,7 +73,7 @@ def run_news_monitor():
     """Run news monitoring collector."""
     try:
         logger.info("Starting news monitor...")
-        api_key = os.getenv("NEWSAPI_KEY")
+        api_key = get_secret("NEWSAPI_KEY")
         result = news_monitor.monitor_news(api_key)
         logger.info(f"News monitor completed: {result}")
     except Exception as e:

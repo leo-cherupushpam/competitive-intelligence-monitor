@@ -9,9 +9,21 @@ from openai import OpenAI
 import os
 
 
+def get_secret(key: str) -> str:
+    """Read a secret from env vars or Streamlit Cloud secrets."""
+    value = os.getenv(key)
+    if not value:
+        try:
+            import streamlit as st
+            value = st.secrets.get(key)
+        except Exception:
+            pass
+    return value
+
+
 def get_client():
-    """Get OpenAI client."""
-    api_key = os.getenv("OPENAI_API_KEY")
+    """Get OpenAI client — checks env vars and Streamlit Cloud secrets."""
+    api_key = get_secret("OPENAI_API_KEY")
     if not api_key:
         return None
     return OpenAI(api_key=api_key)
