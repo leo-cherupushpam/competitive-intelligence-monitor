@@ -13,18 +13,55 @@ def show():
     """Render the Intelligence Queue page."""
 
     st.header("📋 Intelligence Queue")
-    st.write("Review auto-detected competitive moves. Validate to confirm, dismiss to filter noise.")
 
-    # Filters
-    st.subheader("Filters")
+    # Get data
+    try:
+        moves = db.get_all_moves()
+    except Exception as e:
+        st.error(f"Error loading moves: {e}")
+        return
+
+    # Early return if no data
+    if not moves:
+        st.info("### 📊 No competitive data collected yet")
+        st.write("Start by triggering data collection to scan all your sources:")
+        st.write("- **Websites**: Pricing and features pages")
+        st.write("- **RSS feeds**: Blog announcements and releases")
+        st.write("- **News APIs**: Major announcements and partnerships")
+        st.write("- **Job boards**: Hiring signals and team expansion")
+
+        if st.button("🚀 Trigger Data Collection Now", type="primary", use_container_width=True):
+            with st.spinner("Running collectors…"):
+                try:
+                    from background_jobs import trigger_all_collectors
+                    trigger_all_collectors()
+                    st.success("✅ Collection started! Refresh in 1-2 minutes to see results.")
+                except Exception as e:
+                    st.error(f"Collection error: {e}")
+        return
+
+    # Show stats
+    auto_detected = [m for m in moves if m["validation_status"] == "AUTO_DETECTED"]
+    validated = [m for m in moves if m["validation_status"] == "VALIDATED"]
+    dismissed = [m for m in moves if m["validation_status"] == "DISMISSED"]
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("⏳ Pending", len(auto_detected))
+    col2.metric("✅ Validated", len(validated))
+    col3.metric("❌ Dismissed", len(dismissed))
+    col4.metric("📦 Total", len(moves))
+
+    st.divider()
+
+    # Filters with visible labels
+    st.subheader("🔍 Filter Results")
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         status_filter = st.multiselect(
             "Status",
             ["AUTO_DETECTED", "VALIDATED", "DISMISSED"],
-            default=["AUTO_DETECTED"],
-            label_visibility="collapsed"
+            default=["AUTO_DETECTED"]
         )
 
     with col2:
@@ -32,22 +69,19 @@ def show():
         competitor_names = [c["name"] for c in competitors]
         competitor_filter = st.multiselect(
             "Competitor",
-            competitor_names,
-            label_visibility="collapsed"
+            competitor_names
         )
 
     with col3:
         threat_filter = st.multiselect(
             "Threat Level",
-            ["LOW", "MEDIUM", "HIGH"],
-            label_visibility="collapsed"
+            ["LOW", "MEDIUM", "HIGH"]
         )
 
     with col4:
         source_filter = st.multiselect(
             "Source Type",
-            ["WEBSITE", "RSS", "JOBS", "NEWS", "PRODUCTHUNT"],
-            label_visibility="collapsed"
+            ["WEBSITE", "RSS", "JOBS", "NEWS", "PRODUCTHUNT"]
         )
 
     st.divider()

@@ -35,14 +35,14 @@ def show():
     with col1:
         st.subheader(selected_competitor)
     with col2:
-        threat_badge = {
-            "HIGH": "🔴 HIGH",
-            "MEDIUM": "🟡 MEDIUM",
-            "LOW": "🟢 LOW"
-        }.get(competitor["threat_baseline"], "⚪")
-        st.metric("Threat Level", threat_badge)
+        threat_emoji = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(competitor["threat_baseline"], "⚪")
+        threat_level = competitor["threat_baseline"]
+        st.metric("Threat Level", threat_level)
     with col3:
-        st.metric("Website", f"[Link]({competitor['website']})" if competitor["website"] else "N/A")
+        if competitor["website"]:
+            st.markdown(f"🔗 [{competitor['website'][:40]}]({competitor['website']})")
+        else:
+            st.write("No website configured")
 
     st.caption(f"Last monitored: {competitor.get('last_monitored_at', 'Never')}")
     st.divider()

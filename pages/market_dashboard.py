@@ -15,7 +15,6 @@ def show():
     """Render the Market Dashboard page."""
 
     st.header("📊 Market Dashboard")
-    st.write("Real-time competitive landscape analysis for executives.")
 
     try:
         # Get all data
@@ -23,6 +22,16 @@ def show():
         all_moves = db.get_all_moves()
         stats = db.get_stats()
         last_run = db.get_last_collection_run()
+
+        # Empty state
+        if not all_moves:
+            st.info("### No competitive intelligence collected yet")
+            st.write("Go to **Intelligence Queue** to run data collection. You'll see:")
+            st.write("- 🚨 Critical threats from competitors")
+            st.write("- 💡 Opportunities to capitalize on")
+            st.write("- 📊 Market trends and activity patterns")
+            st.write("- 🔄 Data freshness from all sources")
+            return
 
         st.divider()
 

@@ -18,15 +18,21 @@ def show():
     # Left side: Our Roadmap
     st.subheader("📋 Our Planned Features")
 
-    # Get roadmap from session or database
-    if "our_roadmap" not in st.session_state:
-        st.session_state.our_roadmap = []
+    # Load roadmap from database (persists across sessions)
+    roadmap_json = db.get_setting("PRODUCT_ROADMAP")
+    if roadmap_json:
+        try:
+            roadmap_features = json.loads(roadmap_json)
+        except:
+            roadmap_features = []
+    else:
+        roadmap_features = []
 
     col1, col2 = st.columns([3, 1])
     with col1:
         roadmap_input = st.text_area(
             "Paste your planned features (one per line)",
-            value="\n".join(st.session_state.our_roadmap) if st.session_state.our_roadmap else "",
+            value="\n".join(roadmap_features),
             height=200,
             placeholder="Example:\nAI email writer\nAdvanced analytics dashboard\nMobile app launch\nAPI rate limiting\nCypress integration",
             label_visibility="collapsed"
@@ -34,13 +40,14 @@ def show():
 
     with col2:
         if st.button("💾 Save Roadmap", use_container_width=True):
-            roadmap_features = [f.strip() for f in roadmap_input.split("\n") if f.strip()]
-            st.session_state.our_roadmap = roadmap_features
-            st.success("Roadmap saved!")
+            features = [f.strip() for f in roadmap_input.split("\n") if f.strip()]
+            db.save_setting("PRODUCT_ROADMAP", json.dumps(features))
+            st.success("✅ Roadmap saved!")
+            roadmap_features = features
 
-    if st.session_state.our_roadmap:
+    if roadmap_features:
         st.write("**Your Features:**")
-        for feature in st.session_state.our_roadmap:
+        for feature in roadmap_features:
             st.write(f"• {feature}")
 
     st.divider()
@@ -68,8 +75,8 @@ def show():
 
             # Analyze each move against roadmap
             for move in validated_moves:
-                if st.session_state.our_roadmap:
-                    signal = analyze_roadmap_impact(move["title"], st.session_state.our_roadmap)
+                if roadmap_features:
+                    signal = analyze_roadmap_impact(move["title"], roadmap_features)
                 else:
                     signal = {"signal_type": "MONITOR", "reasoning": "No roadmap configured", "confidence": 0.5}
 

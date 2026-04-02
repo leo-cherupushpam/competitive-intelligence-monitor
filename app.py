@@ -121,12 +121,17 @@ if not needs_onboarding:
         except Exception as e:
             st.warning(f"Status unavailable: {e}")
 
-        # Manual trigger (for Settings page to use)
-        if st.button("🔄 Trigger All Collectors Now"):
+        # Manual trigger
+        st.write("")
+        if st.button("🚀 Run Data Collection", use_container_width=True, type="primary"):
             from background_jobs import trigger_all_collectors
-            with st.spinner("Running data collectors..."):
-                trigger_all_collectors()
-            st.success("Data collection triggered!")
+            with st.spinner("Running collectors…"):
+                try:
+                    trigger_all_collectors()
+                    st.success("✅ Collection triggered!")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        st.caption("Runs all configured data sources")
 
 
 # Main Content Area
