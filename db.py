@@ -177,12 +177,12 @@ def init_db():
 # ── COMPETITOR CRUD ──────────────────────────────────────────────────────────
 
 def create_competitor(name: str, website: str = None, market_segment: str = None, threat_baseline: str = "MEDIUM"):
-    """Add a new competitor."""
+    """Add a new competitor. Ignores if already exists."""
     with get_db() as conn:
         c = conn.cursor()
         now = datetime.now(timezone.utc).isoformat()
         c.execute("""
-            INSERT INTO competitors (name, website, market_segment, threat_baseline, added_date)
+            INSERT OR IGNORE INTO competitors (name, website, market_segment, threat_baseline, added_date)
             VALUES (?, ?, ?, ?, ?)
         """, (name, website, market_segment, threat_baseline, now))
         return c.lastrowid

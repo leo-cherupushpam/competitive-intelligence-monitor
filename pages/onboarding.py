@@ -150,23 +150,17 @@ def show():
             with st.spinner("Adding competitors to database..."):
                 added = 0
                 errors = []
-                existing = db.get_all_competitors()
-                existing_names = {c['name'].lower() for c in existing}
 
                 for comp in st.session_state.found_competitors:
                     try:
-                        # Check if competitor already exists (case-insensitive)
-                        if comp['name'].lower() in existing_names:
-                            st.write(f"⏭️ Already tracking: {comp['name']}")
-                        else:
-                            db.create_competitor(
-                                comp['name'],
-                                comp.get('website', ''),
-                                selected_segment if selected_segment != "Auto-detect" else "General",
-                                comp.get('threat_baseline', 'MEDIUM')
-                            )
-                            st.write(f"✅ Added: {comp['name']}")
-                            added += 1
+                        db.create_competitor(
+                            comp['name'],
+                            comp.get('website', ''),
+                            selected_segment if selected_segment != "Auto-detect" else "General",
+                            comp.get('threat_baseline', 'MEDIUM')
+                        )
+                        st.write(f"✅ Added: {comp['name']}")
+                        added += 1
                     except Exception as e:
                         error_msg = f"❌ {comp['name']}: {str(e)}"
                         st.write(error_msg)
