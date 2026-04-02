@@ -202,29 +202,32 @@ if needs_onboarding:
     from pages import onboarding
     onboarding.show()
 else:
+    # Ensure current_page is set
+    if "current_page" not in st.session_state or st.session_state.current_page not in [
+        "Intelligence Queue", "Competitor Profile", "Market Dashboard", "Roadmap Signals", "Settings"
+    ]:
+        st.session_state.current_page = "Intelligence Queue"
+
     # Route to selected page
-    if st.session_state.current_page == "Intelligence Queue":
+    page = st.session_state.current_page
+
+    if page == "Intelligence Queue":
         from pages import intelligence_queue
         intelligence_queue.show()
-
-    elif st.session_state.current_page == "Competitor Profile":
+    elif page == "Competitor Profile":
         from pages import competitor_profile
         competitor_profile.show()
-
-    elif st.session_state.current_page == "Market Dashboard":
+    elif page == "Market Dashboard":
         from pages import market_dashboard
         market_dashboard.show()
-
-    elif st.session_state.current_page == "Roadmap Signals":
+    elif page == "Roadmap Signals":
         from pages import roadmap_signals
         roadmap_signals.show()
-
-    elif st.session_state.current_page == "Settings":
+    elif page == "Settings":
         from pages import settings
         settings.show()
-
     else:
-        st.error("Page not found")
+        st.error(f"Page not found: {page}")
 
 
 # Footer (only show if not onboarding)

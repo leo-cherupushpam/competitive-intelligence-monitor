@@ -169,28 +169,27 @@ def show():
                 st.divider()
 
                 if added > 0:
-                    st.success(f"✅ Successfully added {added} competitors to database!")
+                    st.success(f"✅ Successfully added {added} competitors to the database!")
                     st.balloons()
 
-                    st.info("🎉 **Setup complete!** Your competitors are now being monitored.")
-
+                    st.info("🎉 **Setup complete!** Your competitive intelligence system is ready.")
                     st.write("""
                     **Next steps:**
-                    1. Go to **Settings** → **Data Sources** to configure RSS feeds and pricing pages
-                    2. Click **"🔄 Trigger All Collectors Now"** to start data collection
-                    3. Go to **Intelligence Queue** to review detected competitive moves
-                    4. Validate moves to build up your competitive intelligence
+                    1. Click the button below to proceed
+                    2. Go to Intelligence Queue to run data collection
+                    3. View your first competitive moves
                     """)
 
-                    if st.button("🚀 Go to Intelligence Queue", use_container_width=True, type="primary"):
-                        st.session_state.current_page = "Intelligence Queue"
+                    # Clear session state and rerun to show main app
+                    if st.button("→ Continue to App", use_container_width=True, type="primary"):
+                        # Force a fresh rerun so app.py detects competitors
+                        st.session_state.clear()
                         st.rerun()
                 else:
-                    st.error(f"❌ Failed to add any competitors. {len(errors)} error(s) occurred.")
+                    st.error(f"❌ Failed to add competitors. {len(errors)} error(s):")
                     if errors:
-                        st.write("**Errors:**")
                         for err in errors:
-                            st.write(err)
+                            st.write(f"  {err}")
         elif not competitors:
             st.error("❌ No competitors found. Select a market segment above to use the built-in library.")
 
