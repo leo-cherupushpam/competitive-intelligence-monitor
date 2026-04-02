@@ -175,16 +175,11 @@ def show():
                     st.info("🎉 **Setup complete!** Your competitive intelligence system is ready.")
                     st.write("""
                     **Next steps:**
-                    1. Click the button below to proceed
-                    2. Go to Intelligence Queue to run data collection
-                    3. View your first competitive moves
+                    1. Click **Intelligence Queue** in the sidebar
+                    2. Click **🚀 Run Data Collection** to gather competitive data
+                    3. Validate moves as they arrive
+                    4. Check **Market Dashboard** for executive insights
                     """)
-
-                    # Clear session state and rerun to show main app
-                    if st.button("→ Continue to App", use_container_width=True, type="primary"):
-                        # Force a fresh rerun so app.py detects competitors
-                        st.session_state.clear()
-                        st.rerun()
                 else:
                     st.error(f"❌ Failed to add competitors. {len(errors)} error(s):")
                     if errors:

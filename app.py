@@ -26,14 +26,13 @@ init_database()
 
 # Initialize session state
 if "current_page" not in st.session_state:
-    st.session_state.current_page = "Intelligence Queue"
-
-# Check if onboarding is needed (no competitors configured)
-try:
-    competitors = db.get_all_competitors()
-    needs_onboarding = len(competitors) == 0
-except:
-    needs_onboarding = True
+    # Set default page - Onboarding if no competitors, else Intelligence Queue
+    try:
+        competitors = db.get_all_competitors()
+        default_page = "Onboarding" if len(competitors) == 0 else "Intelligence Queue"
+    except:
+        default_page = "Onboarding"
+    st.session_state.current_page = default_page
 
 # Custom CSS for dark theme
 st.markdown("""
@@ -50,26 +49,26 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar Navigation (only show if not onboarding)
-if not needs_onboarding:
-    with st.sidebar:
-        st.title("🎯 Competitive Intelligence")
-        st.write("Track competitor moves. Validate intelligence. Inform strategy.")
+# Sidebar Navigation
+with st.sidebar:
+    st.title("🎯 Competitive Intelligence")
+    st.write("Track competitor moves. Validate intelligence. Inform strategy.")
 
-        st.divider()
+    st.divider()
 
-        # Navigation
-        page = st.radio(
-            "Navigate to:",
-            options=[
-                "Intelligence Queue",
-                "Competitor Profile",
-                "Market Dashboard",
-                "Roadmap Signals",
-                "Settings"
-            ],
-            label_visibility="collapsed"
-        )
+    # Navigation
+    page = st.radio(
+        "Navigate to:",
+        options=[
+            "Onboarding",
+            "Intelligence Queue",
+            "Competitor Profile",
+            "Market Dashboard",
+            "Roadmap Signals",
+            "Settings"
+        ],
+        label_visibility="collapsed"
+    )
 
         st.session_state.current_page = page
 
@@ -135,7 +134,7 @@ if not needs_onboarding:
 
 
 # Main Content Area
-if not needs_onboarding:
+if st.session_state.current_page != "Onboarding":
     st.title("🎯 Competitive Intelligence Monitor")
 
     # KPI Header Row
@@ -197,40 +196,32 @@ if not needs_onboarding:
 
     st.divider()
 
-# Show onboarding if no competitors configured
-if needs_onboarding:
+# Route to selected page
+page = st.session_state.current_page
+
+if page == "Onboarding":
     from pages import onboarding
     onboarding.show()
+elif page == "Intelligence Queue":
+    from pages import intelligence_queue
+    intelligence_queue.show()
+elif page == "Competitor Profile":
+    from pages import competitor_profile
+    competitor_profile.show()
+elif page == "Market Dashboard":
+    from pages import market_dashboard
+    market_dashboard.show()
+elif page == "Roadmap Signals":
+    from pages import roadmap_signals
+    roadmap_signals.show()
+elif page == "Settings":
+    from pages import settings
+    settings.show()
 else:
-    # Ensure current_page is set
-    if "current_page" not in st.session_state or st.session_state.current_page not in [
-        "Intelligence Queue", "Competitor Profile", "Market Dashboard", "Roadmap Signals", "Settings"
-    ]:
-        st.session_state.current_page = "Intelligence Queue"
-
-    # Route to selected page
-    page = st.session_state.current_page
-
-    if page == "Intelligence Queue":
-        from pages import intelligence_queue
-        intelligence_queue.show()
-    elif page == "Competitor Profile":
-        from pages import competitor_profile
-        competitor_profile.show()
-    elif page == "Market Dashboard":
-        from pages import market_dashboard
-        market_dashboard.show()
-    elif page == "Roadmap Signals":
-        from pages import roadmap_signals
-        roadmap_signals.show()
-    elif page == "Settings":
-        from pages import settings
-        settings.show()
-    else:
-        st.error(f"Page not found: {page}")
+    st.error(f"Page not found: {page}")
 
 
-# Footer (only show if not onboarding)
-if not needs_onboarding:
+# Footer
+if st.session_state.current_page != "Onboarding":
     st.divider()
     st.caption("Competitive Intelligence Monitor v1.0 | Built with Streamlit")
