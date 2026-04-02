@@ -76,17 +76,19 @@ with st.sidebar:
         ("⚙️ Settings", "Settings"),
     ]
 
-    # Create a cleaner button-based navigation
+    # Navigation dropdown
     current = st.session_state.current_page
-    for label, page in nav_items:
-        is_active = page == current
-        button_style = "🔵 " if is_active else "⚪ "
+    selected = st.selectbox(
+        "Go to:",
+        options=[item[1] for item in nav_items],
+        index=[item[1] for item in nav_items].index(current),
+        format_func=lambda x: next(item[0] for item in nav_items if item[1] == x),
+        label_visibility="collapsed"
+    )
 
-        if st.button(button_style + label, use_container_width=True,
-                     key=f"nav_{page}",
-                     type="primary" if is_active else "secondary"):
-            st.session_state.current_page = page
-            st.rerun()
+    if selected != current:
+        st.session_state.current_page = selected
+        st.rerun()
 
     st.divider()
 
