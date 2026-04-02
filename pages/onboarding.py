@@ -141,12 +141,10 @@ def show():
             # Step 4: Add to database
             st.subheader("📊 Step 4: Add to Database")
 
-            add_all = st.checkbox("✅ Add all competitors to monitor", value=True)
-
             if st.button("✨ Start Monitoring", use_container_width=True, type="primary"):
                 with st.spinner("Adding competitors to database..."):
                     added = 0
-                    for comp in competitors:
+                    for comp in st.session_state.found_competitors:
                         try:
                             db.create_competitor(
                                 comp['name'],
