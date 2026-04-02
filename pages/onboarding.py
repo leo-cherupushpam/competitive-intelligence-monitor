@@ -142,8 +142,15 @@ def show():
             st.subheader("📊 Step 4: Add to Database")
 
             if st.button("✨ Start Monitoring", use_container_width=True, type="primary"):
+                # Verify we have found_competitors in session state
+                if "found_competitors" not in st.session_state or not st.session_state.found_competitors:
+                    st.error("❌ No competitors found in session. Please search again above.")
+                    st.stop()
+
                 with st.spinner("Adding competitors to database..."):
                     added = 0
+                    errors = []
+
                     for comp in st.session_state.found_competitors:
                         try:
                             db.create_competitor(
@@ -152,12 +159,17 @@ def show():
                                 selected_segment if selected_segment != "Auto-detect" else "General",
                                 comp.get('threat_baseline', 'MEDIUM')
                             )
+                            st.write(f"✅ Added: {comp['name']}")
                             added += 1
                         except Exception as e:
-                            st.warning(f"Could not add {comp['name']}: {e}")
+                            error_msg = f"❌ {comp['name']}: {str(e)}"
+                            st.write(error_msg)
+                            errors.append(error_msg)
+
+                st.divider()
 
                 if added > 0:
-                    st.success(f"✅ Added {added} competitors!")
+                    st.success(f"✅ Successfully added {added} competitors to database!")
                     st.balloons()
 
                     st.info("🎉 **Setup complete!** Your competitors are now being monitored.")
@@ -170,15 +182,15 @@ def show():
                     4. Validate moves to build up your competitive intelligence
                     """)
 
-                    st.button(
-                        "🚀 Go to Intelligence Queue",
-                        on_click=lambda: st.session_state.update({"show_page": "Intelligence Queue"}),
-                        use_container_width=True
-                    )
-
-                    # Reset form
-                    st.session_state.clear()
-                    st.rerun()
+                    if st.button("🚀 Go to Intelligence Queue", use_container_width=True, type="primary"):
+                        st.session_state.current_page = "Intelligence Queue"
+                        st.rerun()
+                else:
+                    st.error(f"❌ Failed to add any competitors. {len(errors)} error(s) occurred.")
+                    if errors:
+                        st.write("**Errors:**")
+                        for err in errors:
+                            st.write(err)
         elif not competitors:
             st.error("❌ No competitors found. Select a market segment above to use the built-in library.")
 
