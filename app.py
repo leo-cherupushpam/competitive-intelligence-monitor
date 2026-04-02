@@ -56,25 +56,51 @@ with st.sidebar:
 
     st.divider()
 
-    # Navigation
-    page = st.radio(
-        "Navigate to:",
-        options=[
-            "Onboarding",
-            "Intelligence Queue",
-            "Competitor Profile",
-            "Market Dashboard",
-            "Roadmap Signals",
-            "Settings"
-        ],
-        label_visibility="collapsed"
-    )
+    # Navigation Menu
+    st.subheader("📑 Navigation")
 
-        st.session_state.current_page = page
+    # Get data for badges
+    try:
+        moves = db.get_all_moves()
+        pending_count = len([m for m in moves if m["validation_status"] == "AUTO_DETECTED"])
+    except:
+        pending_count = 0
 
-        st.divider()
+    # Define navigation items with icons and optional badges
+    nav_items = [
+        {"page": "Onboarding", "icon": "🚀", "label": "Setup"},
+        {"page": "Intelligence Queue", "icon": "📋", "label": "Validation", "badge": pending_count},
+        {"page": "Competitor Profile", "icon": "🔍", "label": "Profiles"},
+        {"page": "Market Dashboard", "icon": "📊", "label": "Dashboard"},
+        {"page": "Roadmap Signals", "icon": "🛣️", "label": "Strategy"},
+        {"page": "Settings", "icon": "⚙️", "label": "Settings"},
+    ]
 
-        # Sidebar Stats
+    # Render navigation buttons
+    current = st.session_state.current_page
+    for item in nav_items:
+        page = item["page"]
+        icon = item["icon"]
+        label = item["label"]
+        badge = item.get("badge", 0)
+
+        # Build button label with badge
+        if badge > 0 and page == "Intelligence Queue":
+            btn_label = f"{icon} {label} ({badge})"
+        else:
+            btn_label = f"{icon} {label}"
+
+        # Highlight current page
+        btn_type = "primary" if page == current else "secondary"
+
+        if st.button(btn_label, use_container_width=True, type=btn_type, key=f"nav_{page}"):
+            st.session_state.current_page = page
+            st.rerun()
+
+    st.divider()
+
+    # Sidebar Stats (only show if not onboarding)
+    if st.session_state.current_page != "Onboarding":
         st.subheader("📊 Quick Stats")
 
         try:
@@ -104,24 +130,24 @@ with st.sidebar:
                 # Color code based on freshness
                 if time_diff.total_seconds() < 3600:  # Less than 1 hour
                     status_color = "🟢"
-                    status_text = f"Healthy (updated {int(time_diff.total_seconds()/60)}m ago)"
+                    status_text = f"Healthy ({int(time_diff.total_seconds()/60)}m ago)"
                 elif time_diff.total_seconds() < 86400:  # Less than 24 hours
                     status_color = "🟡"
-                    status_text = f"Overdue (last updated {time_diff.days}d ago)"
+                    status_text = f"Overdue ({time_diff.days}d ago)"
                 else:
                     status_color = "🔴"
-                    status_text = f"Stale (last updated {time_diff.days}d ago)"
+                    status_text = f"Stale ({time_diff.days}d ago)"
 
                 st.write(f"{status_color} {status_text}")
-                st.write(f"Items found: {last_run.get('items_found', 0)}")
-                st.write(f"Items processed: {last_run.get('items_processed', 0)}")
+                st.caption(f"Found: {last_run.get('items_found', 0)} | Processed: {last_run.get('items_processed', 0)}")
             else:
-                st.warning("No collection runs yet")
+                st.info("No collection runs yet")
         except Exception as e:
-            st.warning(f"Status unavailable: {e}")
+            st.caption(f"Status: {str(e)[:30]}")
+
+        st.divider()
 
         # Manual trigger
-        st.write("")
         if st.button("🚀 Run Data Collection", use_container_width=True, type="primary"):
             from background_jobs import trigger_all_collectors
             with st.spinner("Running collectors…"):
@@ -130,7 +156,7 @@ with st.sidebar:
                     st.success("✅ Collection triggered!")
                 except Exception as e:
                     st.error(f"Error: {e}")
-        st.caption("Runs all configured data sources")
+        st.caption("Scan all data sources for competitive moves")
 
 
 # Main Content Area
