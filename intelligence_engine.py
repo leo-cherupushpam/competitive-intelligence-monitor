@@ -10,15 +10,31 @@ import os
 
 
 def get_secret(key: str) -> str:
-    """Read a secret from env vars or Streamlit Cloud secrets."""
+    """Read a secret from env vars, Streamlit Cloud secrets, or the database."""
+    # 1. Environment variable (local dev)
     value = os.getenv(key)
-    if not value:
-        try:
-            import streamlit as st
-            value = st.secrets.get(key)
-        except Exception:
-            pass
-    return value
+    if value:
+        return value
+
+    # 2. Streamlit Cloud secrets
+    try:
+        import streamlit as st
+        value = st.secrets.get(key)
+        if value:
+            return value
+    except Exception:
+        pass
+
+    # 3. Database (saved via Settings page in the app)
+    try:
+        import db
+        value = db.get_setting(key)
+        if value:
+            return value
+    except Exception:
+        pass
+
+    return None
 
 
 def get_client():

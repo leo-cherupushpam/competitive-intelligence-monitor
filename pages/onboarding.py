@@ -5,7 +5,7 @@ Asks for company name, AI searches for competitors, auto-adds them.
 
 import streamlit as st
 import db
-from intelligence_engine import find_competitors
+from intelligence_engine import find_competitors, get_secret
 from competitor_registry import get_all_segments, get_competitors_for_segment
 
 
@@ -59,7 +59,30 @@ def show():
 
     st.divider()
 
-    # Step 3: Find competitors
+    # Step 3: OpenAI API Key (if not already configured)
+    has_key = bool(get_secret("OPENAI_API_KEY"))
+    if not has_key:
+        st.subheader("🔑 Step 3: OpenAI API Key")
+        st.write("Required to search for competitors. [Get one free →](https://platform.openai.com/account/api-keys)")
+
+        inline_key = st.text_input(
+            "Paste your OpenAI API key",
+            type="password",
+            placeholder="sk-...",
+            label_visibility="collapsed"
+        )
+        if inline_key:
+            db.save_setting("OPENAI_API_KEY", inline_key)
+            st.success("✅ Key saved!")
+            has_key = True
+
+        if not has_key:
+            st.info("Enter your key above, then click Search.")
+            return
+
+        st.divider()
+
+    # Step 4: Find competitors
     st.subheader("🔍 Step 3: Find Competitors")
 
     if st.button("🤖 Search for Competitors", use_container_width=True, type="primary"):
@@ -141,15 +164,8 @@ def show():
                     st.session_state.clear()
                     st.rerun()
         else:
-            st.error("""
-            ❌ Could not find competitors for this company.
-
-            This might be because:
-            - OpenAI API key is not configured
-            - Company name is not recognized
-
-            You can manually add competitors in **Settings** instead.
-            """)
+            st.error("❌ Could not find competitors. Check your OpenAI key in Settings or try a different company name.")
+            st.info("Or choose a market segment above and we'll suggest competitors from our built-in library.")
 
 
 def should_show_onboarding():

@@ -162,6 +162,15 @@ def init_db():
             )
         """)
 
+        # App settings (key-value store for API keys and config)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
         conn.commit()
 
 
@@ -478,6 +487,32 @@ def get_stats() -> dict:
             "validated_moves": validated,
             "opportunities": opportunities
         }
+
+
+# ── APP SETTINGS ─────────────────────────────────────────────────────────────
+
+def save_setting(key: str, value: str):
+    """Save an app setting (e.g., API key) to the database."""
+    with get_db() as conn:
+        c = conn.cursor()
+        now = datetime.now(timezone.utc).isoformat()
+        c.execute("""
+            INSERT INTO app_settings (key, value, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at
+        """, (key, value, now))
+
+
+def get_setting(key: str) -> str:
+    """Get an app setting value by key. Returns None if not found."""
+    try:
+        with get_db() as conn:
+            c = conn.cursor()
+            c.execute("SELECT value FROM app_settings WHERE key = ?", (key,))
+            row = c.fetchone()
+            return row["value"] if row else None
+    except Exception:
+        return None
 
 
 if __name__ == "__main__":

@@ -194,11 +194,19 @@ def show():
             label_visibility="collapsed"
         )
 
+        # Show current status
+        from intelligence_engine import get_secret
+        current_openai = get_secret("OPENAI_API_KEY")
+        if current_openai:
+            st.success(f"✅ OpenAI key active (ends in ...{current_openai[-4:]})")
+        else:
+            st.warning("⚠️ No OpenAI key configured")
+
         if st.button("💾 Save OpenAI Key"):
             if openai_key:
-                # In production, securely store this (e.g., environment variable or encrypted storage)
-                st.success("✅ OpenAI API key configured")
-                st.info("Key is stored locally. Set OPENAI_API_KEY environment variable to persist across restarts.")
+                db.save_setting("OPENAI_API_KEY", openai_key)
+                st.success("✅ OpenAI API key saved!")
+                st.rerun()
             else:
                 st.warning("Please enter your API key")
 
@@ -215,10 +223,17 @@ def show():
             label_visibility="collapsed"
         )
 
+        current_newsapi = get_secret("NEWSAPI_KEY")
+        if current_newsapi:
+            st.success(f"✅ NewsAPI key active (ends in ...{current_newsapi[-4:]})")
+        else:
+            st.caption("NewsAPI key not set — news monitoring disabled")
+
         if st.button("💾 Save NewsAPI Key"):
             if newsapi_key:
-                st.success("✅ NewsAPI key configured")
-                st.info("Key is stored locally. Set NEWSAPI_KEY environment variable to persist.")
+                db.save_setting("NEWSAPI_KEY", newsapi_key)
+                st.success("✅ NewsAPI key saved!")
+                st.rerun()
             else:
                 st.warning("Please enter your NewsAPI key")
 
