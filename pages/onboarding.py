@@ -109,62 +109,62 @@ def show():
             st.stop()
 
         if competitors:
-            st.success(f"✅ Found {len(competitors)} competitors!")
-
-            # Display found competitors
-            st.write("**Competitors to Monitor:**")
-
-            # Store in session state for next step
+            # Store in session state for display and next steps
             st.session_state.found_competitors = competitors
+            st.rerun()
+        elif not competitors:
+            st.error("❌ No competitors found. Select a market segment above to use the built-in library.")
 
-            for idx, comp in enumerate(competitors, 1):
-                col1, col2, col3 = st.columns([2, 1, 1])
+    # Display found competitors if available
+    if "found_competitors" in st.session_state and st.session_state.found_competitors:
+        competitors = st.session_state.found_competitors
 
-                with col1:
-                    st.write(f"{idx}. **{comp['name']}**")
-                    st.caption(comp.get('reason', ''))
+        st.success(f"✅ Found {len(competitors)} competitors!")
+        st.write("**Competitors to Monitor:**")
 
-                with col2:
-                    threat = comp.get('threat_baseline', 'MEDIUM')
-                    threat_emoji = {
-                        "HIGH": "🔴",
-                        "MEDIUM": "🟡",
-                        "LOW": "🟢"
-                    }.get(threat, "⚪")
-                    st.write(f"{threat_emoji} {threat}")
+        for idx, comp in enumerate(competitors, 1):
+            col1, col2, col3 = st.columns([2, 1, 1])
 
-                with col3:
-                    st.caption(f"[Website]({comp['website']})")
+            with col1:
+                st.write(f"{idx}. **{comp['name']}**")
+                st.caption(comp.get('reason', ''))
 
-            st.divider()
+            with col2:
+                threat = comp.get('threat_baseline', 'MEDIUM')
+                threat_emoji = {
+                    "HIGH": "🔴",
+                    "MEDIUM": "🟡",
+                    "LOW": "🟢"
+                }.get(threat, "⚪")
+                st.write(f"{threat_emoji} {threat}")
 
-            # Step 4: Add to database
-            st.subheader("📊 Step 4: Add to Database")
+            with col3:
+                st.caption(f"[Website]({comp['website']})")
 
-            if st.button("✨ Start Monitoring", use_container_width=True, type="primary"):
-                # Verify we have found_competitors in session state
-                if "found_competitors" not in st.session_state or not st.session_state.found_competitors:
-                    st.error("❌ No competitors found in session. Please search again above.")
-                    st.stop()
+        st.divider()
 
-                with st.spinner("Adding competitors to database..."):
-                    added = 0
-                    errors = []
+        # Step 4: Add to database
+        st.subheader("📊 Step 4: Add to Database")
 
-                    for comp in st.session_state.found_competitors:
-                        try:
-                            db.create_competitor(
-                                comp['name'],
-                                comp.get('website', ''),
-                                selected_segment if selected_segment != "Auto-detect" else "General",
-                                comp.get('threat_baseline', 'MEDIUM')
-                            )
-                            st.write(f"✅ Added: {comp['name']}")
-                            added += 1
-                        except Exception as e:
-                            error_msg = f"❌ {comp['name']}: {str(e)}"
-                            st.write(error_msg)
-                            errors.append(error_msg)
+        if st.button("✨ Start Monitoring", use_container_width=True, type="primary", key="start_monitoring"):
+            with st.spinner("Adding competitors to database..."):
+                added = 0
+                errors = []
+
+                for comp in st.session_state.found_competitors:
+                    try:
+                        db.create_competitor(
+                            comp['name'],
+                            comp.get('website', ''),
+                            selected_segment if selected_segment != "Auto-detect" else "General",
+                            comp.get('threat_baseline', 'MEDIUM')
+                        )
+                        st.write(f"✅ Added: {comp['name']}")
+                        added += 1
+                    except Exception as e:
+                        error_msg = f"❌ {comp['name']}: {str(e)}"
+                        st.write(error_msg)
+                        errors.append(error_msg)
 
                 st.divider()
 
@@ -185,8 +185,6 @@ def show():
                     if errors:
                         for err in errors:
                             st.write(f"  {err}")
-        elif not competitors:
-            st.error("❌ No competitors found. Select a market segment above to use the built-in library.")
 
 
 def should_show_onboarding():
