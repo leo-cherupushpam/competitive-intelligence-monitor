@@ -86,9 +86,27 @@ def show():
     st.subheader("🔍 Step 3: Find Competitors")
 
     if st.button("🤖 Search for Competitors", use_container_width=True, type="primary"):
+        market_segment = None if selected_segment == "Auto-detect" else selected_segment
+        competitors = []
+        ai_error = None
+
         with st.spinner("🔍 AI is searching for competitors..."):
-            market_segment = None if selected_segment == "Auto-detect" else selected_segment
-            competitors = find_competitors(company_name, market_segment)
+            try:
+                competitors = find_competitors(company_name, market_segment)
+            except Exception as e:
+                ai_error = str(e)
+
+        # Fallback: use built-in registry if AI failed or returned nothing
+        if not competitors and market_segment:
+            competitors = get_competitors_for_segment(market_segment)
+            if competitors:
+                st.info(f"Used built-in {market_segment} competitor list (AI unavailable).")
+            elif ai_error:
+                st.error(f"❌ AI search failed: {ai_error}")
+                st.stop()
+        elif not competitors and ai_error:
+            st.error(f"❌ AI search failed: {ai_error}")
+            st.stop()
 
         if competitors:
             st.success(f"✅ Found {len(competitors)} competitors!")
@@ -163,9 +181,8 @@ def show():
                     # Reset form
                     st.session_state.clear()
                     st.rerun()
-        else:
-            st.error("❌ Could not find competitors. Check your OpenAI key in Settings or try a different company name.")
-            st.info("Or choose a market segment above and we'll suggest competitors from our built-in library.")
+        elif not competitors:
+            st.error("❌ No competitors found. Select a market segment above to use the built-in library.")
 
 
 def should_show_onboarding():

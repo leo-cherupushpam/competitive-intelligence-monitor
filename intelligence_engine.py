@@ -296,26 +296,34 @@ Respond ONLY with valid JSON (no markdown):
 Focus on direct competitors in the same market/product category.
 """
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-5-nano-2025-08-07",
-            messages=[
-                {"role": "system", "content": "You are a market research analyst. Respond ONLY with valid JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            max_tokens=500
-        )
+    for model in ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a market research analyst. Respond ONLY with valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.5,
+                max_tokens=500
+            )
 
-        result_text = response.choices[0].message.content.strip()
-        result_text = re.sub(r'^```json\n?', '', result_text)
-        result_text = re.sub(r'\n?```$', '', result_text)
+            result_text = response.choices[0].message.content.strip()
+            result_text = re.sub(r'^```json\n?', '', result_text)
+            result_text = re.sub(r'\n?```$', '', result_text)
 
-        data = json.loads(result_text)
-        return data.get("competitors", [])
-    except Exception as e:
-        print(f"Competitor search error: {e}")
-        return []
+            data = json.loads(result_text)
+            return data.get("competitors", [])
+
+        except Exception as e:
+            err = str(e)
+            # If model not found, try the next one
+            if "model" in err.lower() or "not found" in err.lower() or "does not exist" in err.lower():
+                continue
+            # Any other error (bad key, quota, network) — raise so caller can show it
+            raise
+
+    raise Exception("No working OpenAI model found. Tried gpt-4o-mini, gpt-4o, gpt-3.5-turbo.")
 
 
 if __name__ == "__main__":
