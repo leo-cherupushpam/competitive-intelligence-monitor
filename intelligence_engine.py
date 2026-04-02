@@ -84,9 +84,17 @@ Extract a competitive move from this data. Respond ONLY with valid JSON (no mark
         )
 
         result_text = response.choices[0].message.content.strip()
+
+        if not result_text:
+            raise Exception("Empty response from API")
+
         # Remove markdown code blocks if present
-        result_text = re.sub(r'^```json\n?', '', result_text)
-        result_text = re.sub(r'\n?```$', '', result_text)
+        result_text = re.sub(r'^```json\s*\n?', '', result_text)
+        result_text = re.sub(r'\n?```\s*$', '', result_text)
+        result_text = result_text.strip()
+
+        if not result_text:
+            raise Exception("Response was empty after stripping markdown")
 
         move = json.loads(result_text)
         return {
@@ -178,8 +186,16 @@ Respond ONLY with valid JSON (no markdown):
         )
 
         result_text = response.choices[0].message.content.strip()
-        result_text = re.sub(r'^```json\n?', '', result_text)
-        result_text = re.sub(r'\n?```$', '', result_text)
+
+        if not result_text:
+            raise Exception("Empty response from API")
+
+        result_text = re.sub(r'^```json\s*\n?', '', result_text)
+        result_text = re.sub(r'\n?```\s*$', '', result_text)
+        result_text = result_text.strip()
+
+        if not result_text:
+            raise Exception("Response was empty after stripping markdown")
 
         insight = json.loads(result_text)
         return {
@@ -249,8 +265,16 @@ Analyze impact. Respond ONLY with JSON (no markdown):
         )
 
         result_text = response.choices[0].message.content.strip()
-        result_text = re.sub(r'^```json\n?', '', result_text)
-        result_text = re.sub(r'\n?```$', '', result_text)
+
+        if not result_text:
+            raise Exception("Empty response from API")
+
+        result_text = re.sub(r'^```json\s*\n?', '', result_text)
+        result_text = re.sub(r'\n?```\s*$', '', result_text)
+        result_text = result_text.strip()
+
+        if not result_text:
+            raise Exception("Response was empty after stripping markdown")
 
         signal = json.loads(result_text)
         return {
@@ -304,12 +328,30 @@ Focus on direct competitors in the same market/product category.
         )
 
         result_text = response.choices[0].message.content.strip()
-        result_text = re.sub(r'^```json\n?', '', result_text)
-        result_text = re.sub(r'\n?```$', '', result_text)
+
+        # Check if response is empty
+        if not result_text:
+            raise Exception("Empty response from API")
+
+        # Remove markdown code blocks if present
+        result_text = re.sub(r'^```json\s*\n?', '', result_text)
+        result_text = re.sub(r'\n?```\s*$', '', result_text)
+        result_text = result_text.strip()
+
+        # Parse JSON
+        if not result_text:
+            raise Exception("Response was empty after stripping markdown")
 
         data = json.loads(result_text)
-        return data.get("competitors", [])
+        competitors = data.get("competitors", [])
 
+        if not competitors:
+            raise Exception("No competitors found in response")
+
+        return competitors
+
+    except json.JSONDecodeError as e:
+        raise Exception(f"Failed to parse response as JSON: {str(e)}. Response was: {result_text[:100]}")
     except Exception as e:
         raise
 
